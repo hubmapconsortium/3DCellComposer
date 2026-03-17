@@ -300,8 +300,8 @@ def main():
 	np.savetxt(args.results_path / 'quality_score.txt', [best_quality_score], fmt='%f')
 
 	print("Generating surface meshes for visualization in Blender..")
-	best_cell_mask_final_colored, number_of_colors = coloring_3D(best_cell_mask_final)
-	meshing_3D(best_cell_mask_final, best_cell_mask_final_colored, number_of_colors, args.results_path)
+	best_cell_mask_final_colored, number_of_colors = coloring_3D(cell_mask)
+	meshing_3D(cell_mask, best_cell_mask_final_colored, number_of_colors, args.results_path)
 	
 	print("3D Segmentation and Evaluation Completed.")
 
