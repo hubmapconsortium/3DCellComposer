@@ -39,6 +39,7 @@ import h5py
 import numpy
 import skimage.io
 import skimage.util
+from cellprofiler.modules import _help
 from cellprofiler_core.constants.measurement import (
     C_FILE_NAME,
     C_PATH_NAME,
@@ -48,17 +49,17 @@ from cellprofiler_core.constants.measurement import (
 )
 from cellprofiler_core.constants.setting import get_name_providers
 from cellprofiler_core.module import Module
-from cellprofiler_core.preferences import ABSOLUTE_FOLDER_NAME
-from cellprofiler_core.preferences import DEFAULT_INPUT_FOLDER_NAME
-from cellprofiler_core.preferences import DEFAULT_INPUT_SUBFOLDER_NAME
-from cellprofiler_core.preferences import DEFAULT_OUTPUT_FOLDER_NAME
-from cellprofiler_core.preferences import DEFAULT_OUTPUT_SUBFOLDER_NAME
+from cellprofiler_core.preferences import (
+    ABSOLUTE_FOLDER_NAME,
+    DEFAULT_INPUT_FOLDER_NAME,
+    DEFAULT_INPUT_SUBFOLDER_NAME,
+    DEFAULT_OUTPUT_FOLDER_NAME,
+    DEFAULT_OUTPUT_SUBFOLDER_NAME,
+)
 from cellprofiler_core.setting import Binary, ValidationError
 from cellprofiler_core.setting.choice import Choice
-from cellprofiler_core.setting.subscriber import ImageSubscriber, FileImageSubscriber
-from cellprofiler_core.setting.text import Text, Integer, Directory
-
-from cellprofiler.modules import _help
+from cellprofiler_core.setting.subscriber import FileImageSubscriber, ImageSubscriber
+from cellprofiler_core.setting.text import Directory, Integer, Text
 
 IF_IMAGE = "Image"
 IF_MASK = "Mask"
@@ -237,9 +238,7 @@ automatically.""".format(
 Specify the number of digits to be used for the sequential numbering.
 Zeros will be used to left-pad the digits. If the number specified here
 is less than that needed to contain the number of image sets, the latter
-will override the value entered.""".format(
-                **{"FN_SEQUENTIAL": FN_SEQUENTIAL}
-            ),
+will override the value entered.""".format(**{"FN_SEQUENTIAL": FN_SEQUENTIAL}),
         )
 
         self.wants_file_name_suffix = Binary(
@@ -248,9 +247,7 @@ will override the value entered.""".format(
             doc="""\
 Select "*{YES}*" to add a suffix to the image’s file name. Select "*{NO}*"
 to use the image name as-is.
-            """.format(
-                **{"NO": "No", "YES": "Yes"}
-            ),
+            """.format(**{"NO": "No", "YES": "Yes"}),
         )
 
         self.file_name_suffix = Text(
@@ -267,9 +264,7 @@ If you have metadata associated with your images, you may use metadata tags.
 
 Do not enter the file extension in this setting; it will be appended
 automatically.
-""".format(
-                **{"USING_METADATA_TAGS_REF": _help.USING_METADATA_TAGS_REF}
-            ),
+""".format(**{"USING_METADATA_TAGS_REF": _help.USING_METADATA_TAGS_REF}),
         )
 
         self.file_format = Choice(
@@ -379,9 +374,7 @@ Select "*{NO}*" to be prompted for confirmation first.
 
 If you are running the pipeline on a computing cluster, select "*{YES}*"
 since you will not be able to intervene and answer the confirmation
-prompt.""".format(
-                **{"NO": "No", "YES": "Yes"}
-            ),
+prompt.""".format(**{"NO": "No", "YES": "Yes"}),
         )
 
         self.when_to_save = Choice(
@@ -425,9 +418,7 @@ Instances in which this information may be useful include:
    image. If you are using the machine-learning tools or image viewer in
    CellProfiler Analyst, for example, you will want to enable this
    setting if you want the saved images to be displayed along with the
-   original images.""".format(
-                **{"YES": "Yes"}
-            ),
+   original images.""".format(**{"YES": "Yes"}),
         )
 
         self.create_subdirectories = Binary(
@@ -579,7 +570,13 @@ store images in the subfolder, "*date*\/*plate-name*".""",
         #
         if self.when_to_save == WS_FIRST_CYCLE:
             d = self.get_dictionary(workspace.image_set_list)
-            if workspace.measurements["Image", "Group_Index",] > 1:
+            if (
+                workspace.measurements[
+                    "Image",
+                    "Group_Index",
+                ]
+                > 1
+            ):
                 workspace.display_data.wrote_image = False
                 self.save_filename_measurements(workspace)
                 return
@@ -625,11 +622,21 @@ store images in the subfolder, "*date*\/*plate-name*".""",
         d["CURRENT_FRAME"] += 1
         if self.stack_axis == AXIS_T:
             self.do_save_image(
-                workspace, out_file, pixels, pixel_type, t=current_frame, size_t=frames,
+                workspace,
+                out_file,
+                pixels,
+                pixel_type,
+                t=current_frame,
+                size_t=frames,
             )
         else:
             self.do_save_image(
-                workspace, out_file, pixels, pixel_type, z=current_frame, size_z=frames,
+                workspace,
+                out_file,
+                pixels,
+                pixel_type,
+                z=current_frame,
+                size_z=frames,
             )
 
     def post_group(self, workspace, *args):
@@ -703,7 +710,7 @@ store images in the subfolder, "*date*\/*plate-name*".""",
             return
 
         image = workspace.image_set.get_image(self.image_name.value)
-        #print(workspace.display_data.labels)
+        # print(workspace.display_data.labels)
 
         volumetric_extensions = [FF_NPY, FF_TIFF, FF_H5]
         if image.volumetric and self.file_format.value not in volumetric_extensions:
@@ -712,7 +719,7 @@ store images in the subfolder, "*date*\/*plate-name*".""",
                     self.file_format.value, ", or ".join(volumetric_extensions)
                 )
             )
-        #print(image.labels)
+        # print(image.labels)
 
         if self.save_image_or_figure.value == IF_IMAGE:
             pixels = image.pixel_data
@@ -752,15 +759,27 @@ store images in the subfolder, "*date*\/*plate-name*".""",
                 save_h5(filename, pixels, volumetric=image.volumetric)
             else:
                 skimage.io.imsave(filename, pixels, **save_kwargs)
-                #print(numpy.unique(pixels))
-                #print('test')
-            import os
-            from os.path import join
-            import pickle
+                # print(numpy.unique(pixels))
+                # print('test')
             import bz2
-            pickle.dump(workspace.object_set.get_objects('Cells').segmented, bz2.BZ2File(join(os.path.dirname(filename), 'cell_mask_CellProfiler.pkl'), 'w'))
-            pickle.dump(workspace.object_set.get_objects('Nuclei').segmented, bz2.BZ2File(join(os.path.dirname(filename), 'nuclear_mask_CellProfiler.pkl'), 'w'))
-            #pickle.dump(join(os.path.dirname(filename), 'nuclear_mask_cellprofiler.npy'), workspace.object_set.get_objects('Nuclei').segmented)
+            import os
+            import pickle
+            from os.path import join
+
+            pickle.dump(
+                workspace.object_set.get_objects("Cells").segmented,
+                bz2.BZ2File(
+                    join(os.path.dirname(filename), "cell_mask_CellProfiler.pkl"), "w"
+                ),
+            )
+            pickle.dump(
+                workspace.object_set.get_objects("Nuclei").segmented,
+                bz2.BZ2File(
+                    join(os.path.dirname(filename), "nuclear_mask_CellProfiler.pkl"),
+                    "w",
+                ),
+            )
+            # pickle.dump(join(os.path.dirname(filename), 'nuclear_mask_cellprofiler.npy'), workspace.object_set.get_objects('Nuclei').segmented)
         if self.show_window:
             workspace.display_data.wrote_image = True
 
@@ -810,13 +829,19 @@ store images in the subfolder, "*date*\/*plate-name*".""",
             pn, fn = os.path.split(filename)
             url = cellprofiler_core.utilities.pathname.pathname2url(filename)
             workspace.measurements.add_measurement(
-                "Image", self.file_name_feature, fn,
+                "Image",
+                self.file_name_feature,
+                fn,
             )
             workspace.measurements.add_measurement(
-                "Image", self.path_name_feature, pn,
+                "Image",
+                self.path_name_feature,
+                pn,
             )
             workspace.measurements.add_measurement(
-                "Image", self.url_feature, url,
+                "Image",
+                self.url_feature,
+                url,
             )
 
     @property
@@ -839,7 +864,10 @@ store images in the subfolder, "*date*\/*plate-name*".""",
     def source_path(self, workspace):
         """The path for the image data, or its first parent with a path"""
         if self.file_name_method.value == FN_FROM_IMAGE:
-            path_feature = "%s_%s" % (C_PATH_NAME, self.file_image_name.value,)
+            path_feature = "%s_%s" % (
+                C_PATH_NAME,
+                self.file_image_name.value,
+            )
             assert workspace.measurements.has_feature("Image", path_feature), (
                 "Image %s does not have a path!" % self.file_image_name.value
             )
@@ -857,8 +885,16 @@ store images in the subfolder, "*date*\/*plate-name*".""",
     def get_measurement_columns(self, pipeline):
         if self.update_file_names.value:
             return [
-                ("Image", self.file_name_feature, COLTYPE_VARCHAR_FILE_NAME,),
-                ("Image", self.path_name_feature, COLTYPE_VARCHAR_PATH_NAME,),
+                (
+                    "Image",
+                    self.file_name_feature,
+                    COLTYPE_VARCHAR_FILE_NAME,
+                ),
+                (
+                    "Image",
+                    self.path_name_feature,
+                    COLTYPE_VARCHAR_PATH_NAME,
+                ),
             ]
         else:
             return []
@@ -918,8 +954,7 @@ store images in the subfolder, "*date*\/*plate-name*".""",
         return result
 
     def get_file_format(self):
-        """Return the file format associated with the extension in self.file_format
-        """
+        """Return the file format associated with the extension in self.file_format"""
         if self.save_image_or_figure == IF_MOVIE:
             return FF_TIFF
 
@@ -1018,9 +1053,11 @@ store images in the subfolder, "*date*\/*plate-name*".""",
                 raise ValidationError(
                     "%s is not a defined metadata tag. Check the metadata specifications in your load modules"
                     % undefined_tags[0],
-                    self.single_file_name
-                    if self.file_name_method == FN_SINGLE_NAME
-                    else self.file_name_suffix,
+                    (
+                        self.single_file_name
+                        if self.file_name_method == FN_SINGLE_NAME
+                        else self.file_name_suffix
+                    ),
                 )
 
     def volumetric(self):
@@ -1066,7 +1103,7 @@ class SaveImagesDirectoryPath(Directory):
 
 
 def save_h5(path, pixels, volumetric):
-    """ Saves an image to an hdf5 with zyxc axistag
+    """Saves an image to an hdf5 with zyxc axistag
     This format should be good for ilastik pixel classification for multiplexed images
     This is adapted from: https://github.com/ilastik/ilastik/blob/master/bin/combine_channels_as_h5.py
     path - path to file image
