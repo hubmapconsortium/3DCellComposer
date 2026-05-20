@@ -101,14 +101,14 @@ def deep_segmentation_2D(method, im1, im2, axis, voxel_size, sampling_interval=3
         saved_segmentations = [None] * len(im)
 
     model = None
-    if model_path.is_dir():
-        model = load_model(model_path)
     
     if method=="deepcell":
         from deepcell.applications import Mesmer
         # Initialize TensorFlow
         from tensorflow.compat.v1 import ConfigProto, InteractiveSession
         from tensorflow.keras.models import load_model
+        if model_path.is_dir():
+            model = load_model(model_path)
         import tensorflow as tf
         config = ConfigProto()
         config.gpu_options.allow_growth = True
