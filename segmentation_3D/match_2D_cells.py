@@ -118,10 +118,10 @@ def matching_cells_2D(img, JI_thre):
 		img_new_slice = img[slice_num].astype(int)
 		current_slice_cell_coords = get_indices_sparse(img_current_slice)[1:]
 		new_slice_cell_coords = get_indices_sparse(img_new_slice)[1:]
-		
+
 		current_slice_cell_coords = list(map(lambda x: np.array(x).T, current_slice_cell_coords))
 		new_slice_cell_coords = list(map(lambda x: np.array(x).T, new_slice_cell_coords))
-		
+
 		#print(f"{datetime.now()} After get_indices_sparse")
 		current_slice_cell_matched_list = []
 		new_slice_cell_matched_list = []
@@ -144,7 +144,7 @@ def matching_cells_2D(img, JI_thre):
 									new_slice_cell_best = new_slice_cell
 									i_ind = i
 									j_ind = j-1
-				
+
 				if len(current_slice_cell_best) > 0:
 					current_slice_cell_matched_list.append(current_slice_cell_best)
 					new_slice_cell_matched_list.append(new_slice_cell_best)
@@ -152,7 +152,7 @@ def matching_cells_2D(img, JI_thre):
 					new_slice_cell_matched_index_list.append(j_ind)
 
 		#print(f"{datetime.now()} After i,j loop")
-		
+
 		new_slice_cell_unmatched_list, new_slice_cell_unmatched_index_list = get_unmatched_list(new_slice_cell_matched_index_list, new_slice_cell_coords)
 		new_slice_updated_mask = get_new_slice_mask(current_slice_cell_matched_index_list, new_slice_cell_matched_list, new_slice_cell_unmatched_list, len(np.unique(new_img[:slice_num])), img_current_slice.shape)
 		new_img.append(new_slice_updated_mask)

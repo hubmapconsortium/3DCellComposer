@@ -79,7 +79,7 @@ def deep_segmentation_2D(method, im1, im2, axis, voxel_size, sampling_interval=3
     # z_slice_num = im1.shape[0]
     im1 = im1.astype(dtype)
     im2 = im2.astype(dtype)
-    
+
     if axis == 'XY':
         pixel_size = float(voxel_size[0])
     elif axis == 'XZ':
@@ -90,7 +90,7 @@ def deep_segmentation_2D(method, im1, im2, axis, voxel_size, sampling_interval=3
         im1 = np.rot90(im1, k=1, axes=(1, 0))
         im2 = np.rot90(im2, k=1, axes=(1, 0))
         pixel_size = float(voxel_size[2])
-    
+
     im = np.stack((im1, im2), axis=-1)
 
     ssfilename = results_path / ('saved_segmentations' + axis + '.pkl')
@@ -101,7 +101,7 @@ def deep_segmentation_2D(method, im1, im2, axis, voxel_size, sampling_interval=3
         saved_segmentations = [None] * len(im)
 
     model = None
-    
+
     if method=="deepcell":
         from deepcell.applications import Mesmer
         # Initialize TensorFlow
@@ -116,9 +116,9 @@ def deep_segmentation_2D(method, im1, im2, axis, voxel_size, sampling_interval=3
         config.gpu_options.per_process_gpu_memory_fraction = 0.9
         tf.compat.v1.keras.backend.set_session(tf.compat.v1.Session(config=config))
         app = Mesmer(model=model)
-    
+
     print(f'Segmenting in {axis} direction with sampling interval {sampling_interval}...')
-    
+
     # Process sampled slices
     # start with middle slice of the sampling interval
     startslice = math.floor(sampling_interval/2)
@@ -159,26 +159,26 @@ def deep_segmentation_2D(method, im1, im2, axis, voxel_size, sampling_interval=3
 
     predictions = np.array(predictions)
     #print(predictions.shape)
-    
+
     if sampling_interval > 1:
         print('Filling between sampled slices...')
     #print(predictions.shape)
     labeled_image = fill_in_slices(predictions, len(im))
     #print(labeled_image.shape)
-    
+
     # Extract and rotate masks
     cell_mask = labeled_image[..., 0]
     nuc_mask = labeled_image[..., 1]
     #cell_mask = predictions[..., 0]
     #nuc_mask = predictions[..., 1]
-    
+
     if axis == 'XZ':
         cell_mask = np.rot90(cell_mask, k=-1, axes=(2, 0))
         nuc_mask = np.rot90(nuc_mask, k=-1, axes=(2, 0))
     elif axis == 'YZ':
         cell_mask = np.rot90(cell_mask, k=-1, axes=(1, 0))
         nuc_mask = np.rot90(nuc_mask, k=-1, axes=(1, 0))
-    
+
     return cell_mask, nuc_mask
 
 def pred_deepcell(app, slice, pixel_size, compartment, interior_threshold, maxima_threshold):

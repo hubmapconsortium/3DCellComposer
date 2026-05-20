@@ -31,4 +31,4 @@ if __name__ == '__main__':
 
 	save_dir = bz2.BZ2File(join(file_dir, 'cell_mask_' + sys.argv[2] + '.pkl'), 'w')
 	pickle.dump(img.astype(int), save_dir)
-	
+

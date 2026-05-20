@@ -7,14 +7,14 @@ import numpy as np
 WRAPPER TO PERFORM 2D SEGMENTATIONS ALONG ALL AXES USING DEEPCELL
 Author: Haoran Chen
 Version: 1.1 December 14, 2023 R.F.Murphy
-        Modify dimensions of the XZ and YZ to fully pad z with zeros  
+        Modify dimensions of the XZ and YZ to fully pad z with zeros
 """
 
 model_path = Path("/opt/.keras/models/0_12_9/MultiplexSegmentation")
 
 def deepcell_segmentation_2D(im1, im2, axis, voxel_size):
 	z_slice_num = im1.shape[0]
-	
+
 	if axis == 'XY':
 		pixel_size = float(voxel_size[0])
 	elif axis == 'XZ':
@@ -25,9 +25,9 @@ def deepcell_segmentation_2D(im1, im2, axis, voxel_size):
 		im1 = np.rot90(im1, k=1, axes=(1, 0))
 		im2 = np.rot90(im2, k=1, axes=(1, 0))
 		pixel_size = float(voxel_size[2])
-	
+
 	im = np.stack((im1, im2), axis=-1)
-	
+
 	if axis == 'XY':
 		pass
 	elif axis == 'XZ':
@@ -39,8 +39,8 @@ def deepcell_segmentation_2D(im1, im2, axis, voxel_size):
 		im_zeros = np.zeros((im.shape[0], im.shape[2]-im.shape[1], im.shape[2], im.shape[3]))
 		im = np.hstack((im, im_zeros))
 	#print(im.shape)
-	
-	
+
+
 	from tensorflow.compat.v1 import ConfigProto
 	from tensorflow.compat.v1 import InteractiveSession
 	from tensorflow.keras.models import load_model
@@ -65,7 +65,7 @@ def deepcell_segmentation_2D(im1, im2, axis, voxel_size):
 			labeled_image = app.predict(np.expand_dims(im[i], 0), image_mpp=pixel_size, compartment='both')
 		else:
 			labeled_image = np.vstack((labeled_image, app.predict(np.expand_dims(im[i], 0), image_mpp=pixel_size, compartment='both')))
-			
+
 		if i>0 and (i%istep==0 or i==len(im)-1):
 			print(f'Completed through slice {i}')
 	if axis == 'XY':
@@ -77,5 +77,5 @@ def deepcell_segmentation_2D(im1, im2, axis, voxel_size):
 	elif axis == 'YZ':
 		cell_mask = labeled_image[:, :z_slice_num, :, 0]
 		nuc_mask = labeled_image[:, :z_slice_num, :, 1]
-		
+
 	return cell_mask, nuc_mask

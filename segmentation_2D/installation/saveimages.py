@@ -350,7 +350,7 @@ rescaled.
 {BIT_DEPTH_16} and {BIT_DEPTH_FLOAT} images are supported only for
 TIFF formats.
 
-Note: Opening exported multichannel 16-bit TIFF stacks in ImageJ may require  
+Note: Opening exported multichannel 16-bit TIFF stacks in ImageJ may require
 the BioFormats Importer plugin due to the compression method used by
 CellProfiler.""".format(
                 **{"BIT_DEPTH_FLOAT": BIT_DEPTH_FLOAT, "BIT_DEPTH_16": BIT_DEPTH_16}
@@ -366,7 +366,7 @@ CellProfiler.""".format(
 
 This setting determines how planes are saved into a movie/stack.
 Selecting "T" will save planes as a time series. Selecting "Z"
-will save planes as slices in a 3D z-axis. 
+will save planes as slices in a 3D z-axis.
 """,
         )
 
@@ -607,7 +607,7 @@ store images in the subfolder, "*date*\/*plate-name*".""",
             return
 
         image = workspace.image_set.get_image(self.image_name.value)
-	
+
         pixels = image.pixel_data
         if self.get_bit_depth() == BIT_DEPTH_8:
             pixels = skimage.util.img_as_ubyte(pixels)

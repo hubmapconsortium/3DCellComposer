@@ -53,7 +53,7 @@ def process_segmentation_masks(cell_mask_all_axes,
 		for axis in ['XY', 'XZ', 'YZ']:
 			matched_2D_stack_axis = matching_cells_2D(cell_mask_all_axes[axis], JI)
 			matched_2D_stack_all_JI[JI][axis] = matched_2D_stack_axis
-	
+
 	print("Matching and repairing 3D cells...")
 	matched_3D_all_JI = {}
 	for JI in JI_range:
@@ -62,7 +62,7 @@ def process_segmentation_masks(cell_mask_all_axes,
 		matched_2D_stack_YZ = matched_2D_stack_all_JI[JI]['YZ']
 		matched_3D_cell_mask = matching_cells_3D(matched_2D_stack_XY, matched_2D_stack_XZ, matched_2D_stack_YZ)
 		matched_3D_all_JI[JI] = matched_3D_cell_mask
-	
+
 	print("Matching 3D nuclei...")
 	final_matched_3D_cell_mask_JI = {}
 	final_matched_3D_nuclear_mask_JI = {}
@@ -72,7 +72,7 @@ def process_segmentation_masks(cell_mask_all_axes,
 		                                                                               nuclear_mask_all_axes['XY'])
 		final_matched_3D_cell_mask_JI[JI] = final_matched_3D_cell_mask
 		final_matched_3D_nuclear_mask_JI[JI] = final_matched_3D_nuclear_mask
-	
+
 	print("Evaluating 3D cell segmentations...")
 	quality_score_JI = list()
 	metrics_JI = list()
@@ -91,14 +91,14 @@ def process_segmentation_masks(cell_mask_all_axes,
 		print(f'Quality score = {quality_score}')
 		quality_score_JI.append(quality_score)
 		metrics_JI.append(metrics)
-	
+
 	best_quality_score = max(quality_score_JI)
 	best_JI_index = quality_score_JI.index(best_quality_score)
 	best_JI = JI_range[best_JI_index]
 	best_metrics = metrics_JI[best_JI_index]
 	best_cell_mask = final_matched_3D_cell_mask_JI[best_JI]
 	best_nuclear_mask = final_matched_3D_nuclear_mask_JI[best_JI]
-	
+
 	return best_quality_score, best_metrics, best_cell_mask, best_nuclear_mask
 
 
@@ -109,7 +109,7 @@ def ThreeDCellComposer(image_path, nucleus_channel_marker_list, cytoplasm_channe
 	nucleus_channel, cytoplasm_channel, membrane_channel, image = write_IMC_input_channels(image_path,nucleus_channel_marker_list,cytoplasm_channel_marker_list,membrane_channel_marker_list,downsample_vector)
 	voxel_size = extract_voxel_size_from_tiff(image_path)
 	print('Voxel sizes:',voxel_size)
-	
+
 	print("Segmenting every 2D slice across three axes...")
 	if segmentation_method in ["deepcell", "custom"]:
 		# For a single method
@@ -121,8 +121,8 @@ def ThreeDCellComposer(image_path, nucleus_channel_marker_list, cytoplasm_channe
 				                                                             voxel_size)
 				cell_mask_all_axes[axis] = cell_mask_axis
 				nuclear_mask_all_axes[axis] = nuclear_mask_axis
-		
-		
+
+
 #		elif segmentation_method == "custom":
 #			cell_mask_all_axes = {}
 #			nuclear_mask_all_axes = {}
@@ -131,7 +131,7 @@ def ThreeDCellComposer(image_path, nucleus_channel_marker_list, cytoplasm_channe
 #				                                                #        membrane_channel, axis, voxel_size)
 #				cell_mask_all_axes[axis] = cell_mask_axis
 #				nuclear_mask_all_axes[axis] = nuclear_mask_axis
-#		
+#
 		best_quality_score, best_metrics, best_cell_mask_final, best_nuclear_mask_final = process_segmentation_masks(
 			cell_mask_all_axes,
 			nuclear_mask_all_axes,
@@ -140,10 +140,10 @@ def ThreeDCellComposer(image_path, nucleus_channel_marker_list, cytoplasm_channe
 			membrane_channel,
 			image,
 			voxel_size)
-		
+
 		print(f"Quality Score of final 3D Cell Segmentation = {best_quality_score}")
-	
-	
+
+
 #	elif segmentation_method == "compare":
 #		# For comparing multiple methods
 #		print('installing all methods, it may take some time...')
@@ -183,7 +183,7 @@ def ThreeDCellComposer(image_path, nucleus_channel_marker_list, cytoplasm_channe
 #		best_nuclear_mask_final = nuclear_mask_final_list[best_quality_score_index]
 #		print(f'{best_method} yields the best segmentation.')
 #		print(f"Quality Score of final 3D Cell Segmentation = {best_quality_score}")
-	
+
 	else:
 		print('Invalid segmentation method.')
 		exit()
@@ -191,7 +191,7 @@ def ThreeDCellComposer(image_path, nucleus_channel_marker_list, cytoplasm_channe
 	results_path = f'{os.path.dirname(image_path)}/results'
 	if not os.path.exists(results_path):
 		os.makedirs(results_path)
-	
+
 	mshape= best_cell_mask_final.shape
 	#print(mshape,best_nuclear_mask_final.shape)
 
@@ -223,9 +223,9 @@ def ThreeDCellComposer(image_path, nucleus_channel_marker_list, cytoplasm_channe
 				'Pixels': {
 					'PhysicalSizeX': voxel_size[0],
 					#'PhysicalSizeXUnit': "µm",
- 					'PhysicalSizeY': voxel_size[1], 
+ 					'PhysicalSizeY': voxel_size[1],
  					#'PhysicalSizeYUnit': "µm",
- 					'PhysicalSizeZ': voxel_size[2], 
+ 					'PhysicalSizeZ': voxel_size[2],
 					#'PhysicalSizeZUnit': "µm",
  				},
  				'Channel': { 'ID': 1, 'Name': "Cell",},
@@ -235,15 +235,15 @@ def ThreeDCellComposer(image_path, nucleus_channel_marker_list, cytoplasm_channe
 	)
 
 	metrics_path = f'{results_path}/metrics.json'
-	
+
 	with open(metrics_path, 'w') as f:
 		json.dump(best_metrics, f)
-	
+
 	quality_score_path = f'{results_path}/quality_score.txt'
 	np.savetxt(quality_score_path, [best_quality_score], fmt='%f')
 
 	print("Generating surface meshes for visualization in Blender..")
 	best_cell_mask_final_colored, number_of_colors = coloring_3D(best_cell_mask_final)
 	meshing_3D(best_cell_mask_final, best_cell_mask_final_colored, number_of_colors, results_path)
-	
+
 	print("3D Segmentation and Evaluation Completed.")

@@ -39,7 +39,7 @@ def combine_slices(method, img_dir):
 			nuclear_mask_slice_pieces.append(nuclear_mask_slice)
 		cell_mask_3D = np.stack(cell_mask_slice_pieces, axis=0)
 		nuclear_mask_3D = np.stack(nuclear_mask_slice_pieces, axis=0)
-		
+
 		cell_mask_all_axes[axis] = cell_mask_3D
 		nuclear_mask_all_axes[axis] = nuclear_mask_3D
 
@@ -48,7 +48,7 @@ def combine_slices(method, img_dir):
 		# pickle.dump(nuclear_mask_3D, bz2.BZ2File(f'{img_dir}/nuclear_mask_{method}_{axis}.pkl', 'w'))
 	return cell_mask_all_axes, nuclear_mask_all_axes
 
-					
+
 def split_slices(img_dir):
 	img_names = ['nucleus', 'cytoplasm', 'membrane']
 	axes = ['XY', 'XZ', 'YZ']
@@ -69,7 +69,7 @@ def split_slices(img_dir):
 					os.makedirs(slice_dir)
 				save_dir = join(slice_dir, img_name + '.tif')
 				imsave(save_dir, img_slice.astype(np.uint16))
-					
+
 def segmentation_single_method(method, img_path, voxel_size):
 	current_dir = os.getcwd()
 	run_file = f'run_{method}.sh'

@@ -3,7 +3,7 @@ from CellSegmentationEvaluator.CSE3D import CSE3D
 from CellSegmentationEvaluator.functions import thresholding
 
 """
-FUNCTION USED BY 3DCELLCOMPOSER TO CALCULATE SEGMENTATION EVALUATION 
+FUNCTION USED BY 3DCELLCOMPOSER TO CALCULATE SEGMENTATION EVALUATION
 STATISTICS FOR A SINGLE 3D IMAGE AND CELL AND NUCLEAR MASKS
 Author: Haoran Chen
 Version: 1.1 December 14, 2023 R.F.Murphy, Haoran Chen
@@ -24,7 +24,7 @@ def seg_evaluation_3D(cell_matched_mask,
                       voxel_size,
                       pca_dir):
 
-	
+
 	cell_outside_nucleus_mask = cell_matched_mask - nuclear_matched_mask
 	metric_mask = np.expand_dims(cell_matched_mask, 0)
 	metric_mask = np.vstack((metric_mask, np.expand_dims(nuclear_matched_mask, 0)))
@@ -52,5 +52,5 @@ def seg_evaluation_3D(cell_matched_mask,
 
 	metrics = CSE3D(img_channels, metric_mask, PCA_model, img4thresh, vox_size,[1,2,10,3],[20000,1000])
 	weighted_score = metrics["QualityScore"]
-        
+
 	return weighted_score, metrics

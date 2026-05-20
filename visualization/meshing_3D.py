@@ -31,28 +31,28 @@ def write_to_obj(verts, faces, groups, colors, filename):
 	with open(filename, 'w') as f:
 		f.write(
 			f'mtllib ./data/cell_mesh.mtl\n')
-		
+
 		# Write vertices
 		for v in verts:
 			f.write('v {0} {1} {2}\n'.format(v[0], v[1], v[2]))
-		
+
 		# Keep track of the last group number to identify when to change groups
 		last_group = None
-		
+
 		# Write faces
 		for face_idx in range(len(faces)):
 			# Take the value from the first vertex in the face as the group number
 			face = faces[face_idx]
 			group = groups[face_idx][0]
 			color = colors[face_idx][0]
-			
+
 			# If this is a new group, write a new group tag
 			if group != last_group:
 				f.write(f'g Cell_{group}\n')
 				last_group = group
 				# print(group)
 				f.write(f'usemtl Color_{color}\n')
-			
+
 			# Write the face
 			f.write('f {0} {1} {2}\n'.format(face[0] + 1, face[1] + 1, face[2] + 1))
 
@@ -93,7 +93,7 @@ def generate_color_map(number_of_colors):
 		# Convert HSL to RGB. Saturation and Lightness are set to 0.5 (50%) for vivid colors
 		rgb_color = colorsys.hls_to_rgb(hue / 360, 0.5, 0.5)
 		color_map[i] = rgb_color
-	
+
 	return color_map
 
 
@@ -101,9 +101,9 @@ def generate_color_map(number_of_colors):
 def meshing_3D(mask, mask_colored, num_of_col, output_path: Path):
 
 	cell_coords = get_indices_pandas(mask)[1:]
-	
-	
-	
+
+
+
 	all_verts = []
 	all_faces = []
 	all_values = []
@@ -115,7 +115,7 @@ def meshing_3D(mask, mask_colored, num_of_col, output_path: Path):
 		current_coords = cell_coords[cell_index]
 		current_mask = np.zeros(mask.shape)
 		current_mask[current_coords] = 2
-		
+
 		# 3D mesh
 		current_color = mask_colored[cell_index]
 		verts, faces, normals, values = measure.marching_cubes(current_mask, level=1.999)
@@ -140,7 +140,7 @@ def meshing_3D(mask, mask_colored, num_of_col, output_path: Path):
 				start_triangles += offset
 				offset += len(start_2D_contours)
 				faces = np.vstack([faces, start_triangles])
-			
+
 			z_end = np.max(current_coords[0])
 			if np.sum(current_mask[z_end] != 0) > np.sum(current_mask[z_end-1] != 0):
 				end_slice_mesh = get_2D_mesh(current_mask[z_end])
@@ -152,7 +152,7 @@ def meshing_3D(mask, mask_colored, num_of_col, output_path: Path):
 				end_triangles += offset
 				offset += len(end_2D_contours)
 				faces = np.vstack([faces, end_triangles])
-		
+
 		# Append the new vertices, faces, and values to the main list
 		all_verts.extend(verts)
 		all_faces.extend(faces)
@@ -164,7 +164,7 @@ def meshing_3D(mask, mask_colored, num_of_col, output_path: Path):
 	all_faces = np.vstack(all_faces)
 	all_groups = np.vstack(all_groups)
 	all_colors = np.vstack(all_colors)
-	
+
 	color_map = generate_color_map(num_of_col)
 	write_to_mtl(color_map, f'{output_path}/cell_mesh.mtl')
 	write_to_obj(all_verts, all_faces, all_groups, all_colors, f'{output_path}/cell_mesh.obj')

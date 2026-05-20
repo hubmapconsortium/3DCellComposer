@@ -28,7 +28,7 @@ elif axis == 'YZ':
 	im1 = np.rot90(im1, k=1, axes=(1, 0))
 	im2 = np.rot90(im2, k=1, axes=(1, 0))
 	pixel_size = float(voxel_size[2])
-	
+
 pixel_size_ratio = pixel_size / 1
 im = np.stack((im1, im2))
 from cellpose import models

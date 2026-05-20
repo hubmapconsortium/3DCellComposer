@@ -64,7 +64,7 @@ def get_indices_pandas(data):
 	f = lambda x: np.unravel_index(x.index, data.shape)
 	return pd.Series(d).groupby(d).apply(f)
 
-	
+
 def match_repair_cell_nucleus(nuclear_slice, cell_slice):
 	cell_membrane_mask = get_boundary(cell_slice)
 	cell_coords = get_indices_pandas(cell_slice)[1:]
@@ -97,11 +97,11 @@ def match_repair_cell_nucleus(nuclear_slice, cell_slice):
 								j_ind = j
 			if best_mismatch_fraction < 1 and best_mismatch_fraction > 0:
 				repaired_num += 1
-			
+
 			if len(whole_cell_best) > 0:
 				nucleus_matched_list.append(nucleus_best)
 				nucleus_matched_index_list.append(j_ind)
-	
+
 	nuclear_matched_mask = get_mask(nucleus_matched_list, nuclear_slice.shape)
 
 	return nuclear_matched_mask
@@ -128,23 +128,23 @@ def trim_nuclei_z_slice(cell_mask, nuclear_mask):
 				matched_nuclear_mask[current_nucleus_coords] = cell_idx
 				matched_cell_mask[current_cell_coords] = cell_idx
 
-			
+
 	return matched_cell_mask, matched_nuclear_mask
-	
-	
+
+
 
 def matching_nuclei_3D(cell_mask_3D, nuclear_slice):
-	
+
 
 	repaired_nuclear_slices = []
 	for slice_idx in range(nuclear_slice.shape[0]):
 		#print(slice_idx)
 		repaired_nuclear_slice = match_repair_cell_nucleus(nuclear_slice[slice_idx], cell_mask_3D[slice_idx])
 		repaired_nuclear_slices.append(repaired_nuclear_slice)
-	
+
 	repaired_nuclear_slice = np.stack(repaired_nuclear_slices)
 	matched_nuclear_3D = match_3D_slice(repaired_nuclear_slice, cell_mask_3D)
-	
+
 	matched_cell_3D, matched_nuclear_3D = trim_nuclei_z_slice(cell_mask_3D, matched_nuclear_3D)
 	return matched_cell_3D, matched_nuclear_3D
-	
+

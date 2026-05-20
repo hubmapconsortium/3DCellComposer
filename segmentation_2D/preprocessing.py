@@ -6,7 +6,7 @@ import numpy as np
 import xml.etree.ElementTree as ET
 #from skimage.measure import block_reduce
 """
-FUNCTIONS TO READ IMAGE AND METADATA 
+FUNCTIONS TO READ IMAGE AND METADATA
 Author: Haoran Chen
 Version: 1.3 February 14, 2025 R.F.Murphy
 Version: 1.5.1 March 31m 2025 R.F.Murphy
@@ -99,11 +99,11 @@ def write_IMC_input_channels(img_file: Path, results_dir: Path, nucleus_channel_
             image = image[cl[0]:cl[1],:,cl[2]:cl[3],cl[4]:cl[5]]
             print(f"Cropping image to shape {image.shape}")
     channel_names = get_channel_names(img_file)
-    
+
     nucleus_channel = get_channel_intensity(nucleus_channel_marker_list, channel_names, image)
-    
+
     cytoplasm_channel = get_channel_intensity(cytoplasm_channel_marker_list, channel_names, image)
-    
+
     membrane_channel = get_channel_intensity(membrane_channel_marker_list, channel_names, image)
 
     imsave(results_dir / 'nucleus.tif', nucleus_channel)
@@ -111,5 +111,5 @@ def write_IMC_input_channels(img_file: Path, results_dir: Path, nucleus_channel_
     imsave(results_dir / 'membrane.tif', membrane_channel)
 
     #print(image.shape)
-    
+
     return nucleus_channel, cytoplasm_channel, membrane_channel, image

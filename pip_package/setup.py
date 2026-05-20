@@ -6,7 +6,7 @@ long_description = (this_directory / "README.md").read_text()
 
 setup(
     name='ThreeDCellComposer',
-    version='1.5.5',    
+    version='1.5.5',
     description='3D cell segmentation by composing 2D segmentations',
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -32,7 +32,7 @@ setup(
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Science/Research',
-        'License :: OSI Approved :: MIT License',  
+        'License :: OSI Approved :: MIT License',
         'Operating System :: POSIX :: Linux',
         'Operating System :: MacOS :: MacOS X',
         'Programming Language :: Python :: 3',

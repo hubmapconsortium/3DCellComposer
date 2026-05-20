@@ -63,7 +63,7 @@ class DisplayDataOnImage(Module):
 	module_name = "DisplayDataOnImage"
 	category = "Data Tools"
 	variable_revision_number = 6
-	
+
 	def create_settings(self):
 		"""Create your settings by subclassing this function
 
@@ -86,7 +86,7 @@ class DisplayDataOnImage(Module):
 """
 			    % globals(),
 		)
-		
+
 		self.objects_name = LabelSubscriber(
 			"Select the input objects",
 			"None",
@@ -97,13 +97,13 @@ Choose the name of objects identified by some previous module (such as
 **IdentifyPrimaryObjects** or **IdentifySecondaryObjects**).
 """,
 		)
-		
+
 		def object_fn():
 			if self.objects_or_image == OI_OBJECTS:
 				return self.objects_name.value
 			else:
 				return "Image"
-		
+
 		self.measurement = Measurement(
 			"Measurement to display",
 			object_fn,
@@ -113,7 +113,7 @@ some previous module on either the whole image (if displaying a single
 image measurement) or on the objects you selected.
 """,
 		)
-		
+
 		self.wants_image = Binary(
 			"Display background image?",
 			True,
@@ -126,7 +126,7 @@ overlay image and the original image later. Choose "Yes" to
 display the measurements on top of a background image or "No"
 to display the measurements on a black background.""",
 		)
-		
+
 		self.image_name = ImageSubscriber(
 			"Select the image on which to display the measurements",
 			"None",
@@ -136,7 +136,7 @@ This can be any image created or loaded by a previous module.
 If you have chosen not to display the background image, the image
 will only be used to determine the dimensions of the displayed image.""",
 		)
-		
+
 		self.color_or_text = Choice(
 			"Display mode",
 			[CT_TEXT, CT_COLOR],
@@ -153,7 +153,7 @@ default color map.
 """
 			    % globals(),
 		)
-		
+
 		self.colormap = Colormap(
 			"Color map",
 			doc="""\
@@ -171,7 +171,7 @@ of the available colormaps.
 			"red",
 			doc="""This is the color that will be used when displaying the text.""",
 		)
-		
+
 		self.display_image = ImageName(
 			"Name the output image that has the measurements displayed",
 			"DisplayImage",
@@ -181,21 +181,21 @@ superimposed. You can use this name to refer to the image in subsequent
 modules (such as **SaveImages**).
 """,
 		)
-		
+
 		self.font_size = Integer(
 			"Font size (points)",
 			10,
 			minval=1,
 			doc="""Set the font size of the letters to be displayed.""",
 		)
-		
+
 		self.decimals = Integer(
 			"Number of decimals",
 			2,
 			minval=0,
 			doc="""Set how many decimals to be displayed, for example 2 decimals for 0.01; 3 decimals for 0.001.""",
 		)
-		
+
 		self.saved_image_contents = Choice(
 			"Image elements to save",
 			[E_IMAGE, E_FIGURE, E_AXES],
@@ -209,7 +209,7 @@ This setting controls the level of annotation on the image:
 """
 			    % globals(),
 		)
-		
+
 		self.offset = Integer(
 			"Annotation offset (in pixels)",
 			0,
@@ -219,7 +219,7 @@ placed at the object (or image) center, which can obscure relevant features of
 the object. This setting adds a specified offset to the text, in a random
 direction.""",
 		)
-		
+
 		self.color_map_scale_choice = Choice(
 			"Color map scale",
 			[CMS_USE_MEASUREMENT_RANGE, CMS_MANUAL],
@@ -252,7 +252,7 @@ This setting determines the lower and upper bounds of the values for the
 color map.
 """,
 		)
-	
+
 	def settings(self):
 		"""Return the settings to be loaded or saved to/from the pipeline
 
@@ -278,7 +278,7 @@ color map.
 			self.color_map_scale_choice,
 			self.color_map_scale,
 		]
-	
+
 	def visible_settings(self):
 		"""The settings that are visible in the UI
         """
@@ -296,18 +296,18 @@ color map.
 			result += [self.text_color, self.font_size, self.decimals, self.offset]
 		result += [self.display_image, self.saved_image_contents]
 		return result
-	
+
 	def use_color_map(self):
 		"""True if the measurement values are rendered using a color map"""
 		return self.objects_or_image == OI_OBJECTS and self.color_or_text == CT_COLOR
-	
+
 	def run(self, workspace):
 		import matplotlib
 		import matplotlib.cm
 		import matplotlib.backends.backend_agg
 		import matplotlib.transforms
 		from cellprofiler.gui.tools import figure_to_image, only_display_image
-		
+
 		#
 		# Get the image
 		#
@@ -376,7 +376,7 @@ color map.
 		workspace.display_data.y = y
 		fig = matplotlib.figure.Figure()
 		axes = fig.add_subplot(1, 1, 1)
-		
+
 		def imshow_fn(pixel_data):
 			# Note: requires typecast to avoid failure during
 			#       figure_to_image (IMG-764)
@@ -385,9 +385,9 @@ color map.
 			img[img > 255] = 255
 			img = img.astype(numpy.uint8)
 			axes.imshow(img, cmap=matplotlib.cm.get_cmap("Greys"))
-		
+
 		self.display_on_figure(workspace, axes, imshow_fn)
-		
+
 		canvas = matplotlib.backends.backend_agg.FigureCanvasAgg(fig)
 		if self.saved_image_contents == E_AXES:
 			fig.set_frameon(False)
@@ -404,24 +404,24 @@ color map.
 				# cbar = .colorbar()
 				# cbar.remove()
 			only_display_image(fig, pixel_data.shape)
-		
+
 		else:
 			if not self.use_color_map():
 				fig.subplots_adjust(0.1, 0.1, 0.9, 0.9, 0, 0)
-		
+
 		pixel_data = figure_to_image(fig, dpi=fig.dpi)
 		image = Image(pixel_data)
-		
+
 		workspace.image_set.add(self.display_image.value, image)
-	
+
 	def run_as_data_tool(self, workspace):
 		# Note: workspace.measurements.image_set_number contains the image
 		#    number that should be displayed.
 		import wx
 		import os.path
-		
+
 		im_id = self.image_name.value
-		
+
 		m = workspace.measurements
 		image_name = self.image_name.value
 		pathname_feature = "_".join((C_PATH_NAME, image_name))
@@ -441,15 +441,15 @@ color map.
 		else:
 			pathname = m.get_current_image_measurement(pathname_feature)
 			filename = m.get_current_image_measurement(filename_feature)
-		
+
 		# Add the image to the workspace ImageSetList
 		image_set_list = workspace.image_set_list
 		image_set = image_set_list.get_image_set(0)
 		ip = FileImage(im_id, pathname, filename)
 		image_set.providers.append(ip)
-		
+
 		self.run(workspace)
-	
+
 	def display(self, workspace, figure):
 		figure.set_subplots((1, 1))
 		ax = figure.subplot(0, 0)
@@ -457,15 +457,15 @@ color map.
 			self.objects_name.value if self.objects_or_image == OI_OBJECTS else "Image",
 			self.measurement.value,
 		)
-		
+
 		def imshow_fn(pixel_data):
 			if pixel_data.ndim == 3:
 				figure.subplot_imshow_color(0, 0, pixel_data, title=title)
 			else:
 				figure.subplot_imshow_grayscale(0, 0, pixel_data, title=title)
-		
+
 		self.display_on_figure(workspace, ax, imshow_fn)
-	
+
 	def display_on_figure(self, workspace, axes, imshow_fn):
 		if self.use_color_map():
 			labels = workspace.display_data.labels
@@ -511,7 +511,7 @@ color map.
 					svalue = "%.*f" % (self.decimals.value, value)
 				except:
 					svalue = str(value)
-				
+
 				text = matplotlib.text.Text(
 					x=x,
 					y=y,
@@ -522,7 +522,7 @@ color map.
 					horizontalalignment="center",
 				)
 				axes.add_artist(text)
-	
+
 	def upgrade_settings(self, setting_values, variable_revision_number, module_name):
 		if variable_revision_number == 1:
 			(
@@ -547,12 +547,12 @@ color map.
 				saved_image_contents,
 			]
 			variable_revision_number = 2
-		
+
 		if variable_revision_number == 2:
 			"""Added annotation offset"""
 			setting_values = setting_values + ["0"]
 			variable_revision_number = 3
-		
+
 		if variable_revision_number == 3:
 			# Added color map mode
 			setting_values = setting_values + [
@@ -560,7 +560,7 @@ color map.
 				get_default_colormap(),
 			]
 			variable_revision_number = 4
-		
+
 		if variable_revision_number == 4:
 			# added wants_image
 			setting_values = setting_values + ["Yes"]

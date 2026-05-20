@@ -190,7 +190,7 @@ def process_segmentation_masks(cell_mask_all_axes,
 			print(f'- quality score = {quality_score}')
 			quality_score_JI.append(quality_score)
 			metrics_JI.append(metrics)
-	
+
 		print(quality_score_JI)
 		best_quality_score = max(quality_score_JI)
 		best_JI_index = quality_score_JI.index(best_quality_score)
@@ -199,23 +199,23 @@ def process_segmentation_masks(cell_mask_all_axes,
 	best_cell_mask = final_matched_3D_cell_mask_JI[best_JI]
 	best_nuclear_mask = final_matched_3D_nuclear_mask_JI[best_JI]
 	print(f"{datetime.now()}")
-	
+
 	return best_quality_score, best_metrics, best_cell_mask, best_nuclear_mask
 
 def convert_to_sequential_labels(mask):
 
     unique_labels = np.unique(mask)
     unique_labels = unique_labels[unique_labels > 0]
-    
+
     # Create relabeling map (old label -> new sequential label)
-    relabel_map = {old_label: new_label for new_label, old_label 
+    relabel_map = {old_label: new_label for new_label, old_label
                    in enumerate(unique_labels, start=1)}
-    
+
     # Create new sequential mask
     sequential_mask = np.zeros_like(mask, dtype=np.int32)
     for old_label, new_label in relabel_map.items():
         sequential_mask[mask == old_label] = new_label
-    
+
     return sequential_mask, relabel_map
 
 def get_3D_boundaries(mask):
@@ -223,7 +223,7 @@ def get_3D_boundaries(mask):
     # First relabel the mask with sequential integers
     sequential_mask, relabel_map = convert_to_sequential_labels(mask)
     print(f"Relabeled {len(relabel_map)} objects")
-    
+
     # Generate boundaries with sequential labels
     boundaries = np.zeros_like(sequential_mask)
     # for label in range(1, len(relabel_map) + 1):
@@ -233,29 +233,29 @@ def get_3D_boundaries(mask):
     # Process each z-slice
     for z in range(sequential_mask.shape[0]):
         boundaries[z] = get_2D_boundaries(sequential_mask[z])
-        
+
         # Print progress every 10 slices
         if z % 10 == 0:
             print(f"Processed slice {z}/{sequential_mask.shape[0]}")
-    
+
     return sequential_mask, boundaries
 
 def get_2D_boundaries(mask_slice):
 
     boundaries = np.zeros_like(mask_slice)
     labels = np.unique(mask_slice)[1:]  # exclude 0
-    
+
     for label in labels:
         # Create binary mask for current label
         binary_mask = (mask_slice == label)
-        
+
         # Get boundary by subtracting eroded mask from original
         eroded = binary_erosion(binary_mask)
         boundary = binary_mask & ~eroded
-        
+
         # Set boundary with original label value
         boundaries[boundary] = label
-    
+
     return boundaries
 
 def writeresults(rpath,best_cell_mask_final,best_nuclear_mask_final,best_metrics,best_quality_score):
@@ -402,7 +402,7 @@ def main():
 	crop_limits = list(map(int, args.crop_limits))
 
 	minslices = args.min_slices
-        
+
 	# Process the image
 	print("Generating input channels for segmentation...")
 	nucleus_channel, cytoplasm_channel, membrane_channel, image = write_IMC_input_channels(image_path,
@@ -420,7 +420,7 @@ def main():
 	if any(x!=1 for x in downsample_vector):
 		voxel_down = (vsi[0]*downsample_vector[0],vsi[1]*downsample_vector[1],vsi[2]*downsample_vector[2])
 		print(f"After downsample voxel size Z,Y,X: {voxel_down}")
-	
+
 		nucleus_down = block_reduce(nucleus_channel,block_size=downsample_vector,func=np.max)
 		cytoplasm_down = block_reduce(cytoplasm_channel,block_size=downsample_vector,func=np.max)
 		membrane_down = block_reduce(membrane_channel,block_size=downsample_vector,func=np.max)
@@ -457,7 +457,7 @@ def main():
 				cell_mask_axis, nuclear_mask_axis = deep_segmentation_2D(args.segmentation_method, nucleus_down, membrane_down, axis, voxel_down, sampling_interval[axis], args.chunk_size, args.results_path, args.maxima_threshold, args.interior_threshold, args.compartment, args.min_slice_padding)
 				cell_mask_all_axes[axis] = cell_mask_axis
 				nuclear_mask_all_axes[axis] = nuclear_mask_axis
-                        
+
 			best_quality_score, best_metrics, best_cell_mask_final, best_nuclear_mask_final = process_segmentation_masks(
 				cell_mask_all_axes,
 				nuclear_mask_all_axes,
@@ -487,7 +487,7 @@ def main():
 				print(f"Quality score is too low, Sampling interval is reduced to {sampling_interval}")
 				print(f"Tries left: {max_tries}")
 
-	
+
 	elif args.segmentation_method == "compare":
 
 		# For comparing multiple methods
@@ -526,7 +526,7 @@ def main():
 			metrics_list.append(method_metrics)
 			cell_mask_final_list.append(method_cell_mask_final)
 			nuclear_mask_final_list.append(method_nuclear_mask_final)
-		
+
 		best_quality_score = max(quality_score_list)
 		best_quality_score_index = quality_score_list.index(best_quality_score)
 		best_metrics = metrics_list[best_quality_score_index]
@@ -545,7 +545,7 @@ def main():
 
 	with open(args.results_path / 'command_line_settings.txt', 'a') as f:
 		f.write(f"Program end: {datetime.now()}\n")
-	
+
 	print("3D Segmentation and Evaluation Completed.")
 
 

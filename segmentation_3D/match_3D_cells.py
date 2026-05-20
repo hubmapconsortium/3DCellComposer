@@ -24,7 +24,7 @@ def get_indices_pandas(data):
 
 def get_volumes_from_indices(series):
 	return series.apply(lambda x: len(x[0]))
-	
+
 def matching_cells_3D(mask_XY, mask_XZ, mask_YZ, minslices):
 
 	#print(mask_XY.shape,mask_XZ.shape,mask_YZ.shape)
@@ -38,7 +38,7 @@ def matching_cells_3D(mask_XY, mask_XZ, mask_YZ, minslices):
 	Y_max = np.max(mask_XZ) + 1
 	segmentation = np.zeros(mask_XY.shape, dtype=np.int64)
 
-	
+
 	for z in range(0, mask_XY.shape[0]):
 		for x in range(0, mask_XY.shape[1]):
 			for y in range(0, mask_XY.shape[2]):
@@ -50,11 +50,11 @@ def matching_cells_3D(mask_XY, mask_XZ, mask_YZ, minslices):
 				else:
 					index_1D = Y + X * Y_max + Z * X_max * Y_max
 				segmentation[z, x, y] = index_1D
-	
-	
+
+
 	cell_coords = get_indices_pandas(segmentation)[1:]
-	
-	
+
+
 	cell_volumes = get_volumes_from_indices(cell_coords)
 	sorted_cells = sorted(cell_volumes.keys(), key=lambda x: cell_volumes[x], reverse=True)
 

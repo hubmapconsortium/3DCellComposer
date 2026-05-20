@@ -69,7 +69,7 @@ for i in range(len(im)):
 		labeled_image = app.predict(np.expand_dims(im[i], 0), image_mpp=pixel_size, compartment='both')
 	else:
 		labeled_image = np.vstack((labeled_image, app.predict(np.expand_dims(im[i], 0), image_mpp=pixel_size, compartment='both')))
-		
+
 if axis == 'XY':
 	cell_mask = labeled_image[:, :, :, 0]
 	nuc_mask = labeled_image[:, :, :, 1]

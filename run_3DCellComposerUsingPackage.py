@@ -80,7 +80,7 @@ def main():
 						help="Zl,Zh,Yl,Yh,Xl,Xh limits for cropping before segmentation")
 	parser.add_argument('--min_slice_padding', type=int, default="512",
 						help="minimum size to pad slices to")
-	
+
 	args = parser.parse_args()
 	dsv = args.downsample_vector
 	downsample_vector = (int(dsv[0]),int(dsv[1]),int(dsv[2]))
