@@ -247,7 +247,7 @@ def convert_to_sequential_labels(mask):
     return sequential_mask, relabel_map
 
 
-def get_3D_boundaries(mask):
+def get_3D_boundaries(mask: np.ndarray) -> tuple[np.ndarray, np.ndarray, dict]:
 
     # First relabel the mask with sequential integers
     sequential_mask, relabel_map = convert_to_sequential_labels(mask)
@@ -267,7 +267,7 @@ def get_3D_boundaries(mask):
         if z % 10 == 0:
             print(f"Processed slice {z}/{sequential_mask.shape[0]}")
 
-    return sequential_mask, boundaries
+    return sequential_mask, boundaries, relabel_map
 
 
 def get_2D_boundaries(mask_slice):
@@ -299,14 +299,19 @@ def writeresults(
     if not rpath.is_dir():
         rpath.mkdir(exist_ok=True, parents=True)
     # get boundaries
-    cell_mask, cell_boundaries = get_3D_boundaries(best_cell_mask_final)
-    nuclear_mask, nuclear_boundaries = get_3D_boundaries(best_nuclear_mask_final)
+    cell_mask, cell_boundaries, cell_mapping = get_3D_boundaries(best_cell_mask_final)
+    nuclear_mask, nuclear_boundaries, nucleus_mapping = get_3D_boundaries(
+        best_nuclear_mask_final
+    )
     print(f"Number of cells in segmentation: {np.max(cell_mask)}")
     # Write masks
     tifffile.imwrite(rpath / "3D_cell_mask.tif", cell_mask)
     tifffile.imwrite(rpath / "3D_nuclear_mask.tif", nuclear_mask)
     tifffile.imwrite(rpath / "3D_cell_boundaries.tif", cell_boundaries)
     tifffile.imwrite(rpath / "3D_nuclear_boundaries.tif", nuclear_boundaries)
+
+    with open(rpath / "cell_id_mapping.json", "w") as f:
+        json.dump(cell_mapping, f)
 
     with open(rpath / "metrics.json", "w") as f:
         json.dump(best_metrics, f)
