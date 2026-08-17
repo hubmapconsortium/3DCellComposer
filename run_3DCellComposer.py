@@ -281,11 +281,11 @@ def main():
 	parser.add_argument("image_path",
 						help="Path to the multiplexed image, or directory containing one image",
 						type=Path)
-	parser.add_argument("nucleus_channel_marker_list", type=parse_marker_list,
+	parser.add_argument("nucleus_channel_marker_list", type=parse_marker_list, default=None,
 	                    help="A list of nuclear marker(s) in multiplexed image as input for segmentation")
-	parser.add_argument("cytoplasm_channel_marker_list", type=parse_marker_list,
+	parser.add_argument("cytoplasm_channel_marker_list", type=parse_marker_list, default=None,
 	                    help="A list of cytoplasmic marker(s) in multiplexed image as input for segmentation")
-	parser.add_argument("membrane_channel_marker_list", type=parse_marker_list,
+	parser.add_argument("membrane_channel_marker_list", type=parse_marker_list, default=None,
 	                    help="A list of cell membrane marker(s) in multiplexed image as input for segmentation")
 	parser.add_argument("--segmentation_method", type=str, choices=["deepcell", "cellpose", "custom"],
 	                    default="deepcell",
@@ -320,7 +320,7 @@ def main():
 						help="DeepCell parameter for segmentation (lower gives fewer cells)")
 	parser.add_argument('--compartment', type=str, default="both",
 						help="DeepCell channels to use (both, whole-cell, nuclear)")
-	parser.add_argument('--crop_limits', type=parse_marker_list, default="0,-1,0,-1,0,-1",
+	parser.add_argument('--crop_limits', type=parse_marker_list, default=None,#"0,-1,0,-1,0,-1",
 						help="Zl,Zh,Yl,Yh,Xl,Xh limits for cropping before segmentation")
 	parser.add_argument('--min_slice_padding', type=int, default="512",
 						help="minimum size to pad slices to")
@@ -328,8 +328,13 @@ def main():
 						help="skip YZ slicing")
 	parser.add_argument('--clear_cache', type=bool, default=False,
 						help="delete saved intermediate files from a previous run from the results_path before starting")
-	parser.add_argument('--min_slices', type=int, default="4",
+	parser.add_argument('--min_slices', type=int, default="2",
 						help="minimum number of z slices required to be considered as a 3D cell")
+	parser.add_argument('--channel_names', type=str, default="/hive/users/tedz/3DCellComposer/Tissue_1_tiles/target/MarkerList.txt", 
+					 	help= 'Path to the channel names file')
+	parser.add_argument('--pixel_size', type=list, default=None, #[0.507, 0.507, 1.0],
+						help='Pixel size in microns')
+	
 
 	CCversion = "v1.5.3"
 
@@ -399,9 +404,24 @@ def main():
 	downsample_vector = (int(dsv[0]),int(dsv[1]),int(dsv[2]))
 	#downsample_vector = list(map(int, dsv))
 
-	crop_limits = list(map(int, args.crop_limits))
+	if args.crop_limits:
+		crop_limits = list(map(int, args.crop_limits))
+	else:
+		crop_limits = None
 
-	minslices = args.min_slices
+	if args.channel_names:
+		#read channel names from txt file
+		with open(args.channel_names, 'r') as f:
+			channel_names = f.read().splitlines()
+	else:
+		channel_names = None
+
+	if args.nucleus_channel_marker_list is None:
+		args.nucleus_channel_marker_list = channel_names
+	if args.cytoplasm_channel_marker_list is None:
+		args.cytoplasm_channel_marker_list = channel_names
+	if args.membrane_channel_marker_list is None:
+		args.membrane_channel_marker_list = channel_names
         
 	# Process the image
 	print("Generating input channels for segmentation...")
@@ -409,12 +429,14 @@ def main():
 																						   args.results_path,
 	                                                                                       args.nucleus_channel_marker_list,
 	                                                                                       args.cytoplasm_channel_marker_list,
-	                                                                                       args.membrane_channel_marker_list, crop_limits)
+	                                                                                       args.membrane_channel_marker_list, 
+																						   crop_limits,
+																						   channel_names)
 	#print(nucleus_channel.shape,cytoplasm_channel.shape,membrane_channel.shape,image.shape)
 	print(f"Marker channels shape: {nucleus_channel.shape}, All channels shape: {image.shape}")
 	voxel_size = extract_voxel_size_from_tiff(image_path)
 	#values are returned X,Y,Z but image is Z,Y,X so reverse
-	vsi =(float(voxel_size[2]),float(voxel_size[1]),float(voxel_size[0]))
+	vsi = (int(float(voxel_size[2])), int(float(voxel_size[1])), int(float(voxel_size[0])))
 	#vsi = list(map(int, voxel_size))
 	print(f"Original voxel size Z,Y,X: {vsi}")
 	if any(x!=1 for x in downsample_vector):
@@ -470,7 +492,7 @@ def main():
 				args.skip_eval,
 				args.results_path,
 				downsample_vector,
-				minslices)
+				args.min_slices)
 
 			if not args.skip_eval:
 				print(f"Quality Score of this 3D Cell Segmentation = {best_quality_score}")
@@ -520,7 +542,7 @@ def main():
 				skip_eval,
 				results_path,
 				downsample_vector,
-				minslices)
+				args.min_slices)
 
 			quality_score_list.append(method_quality_score)
 			metrics_list.append(method_metrics)

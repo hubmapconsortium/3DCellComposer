@@ -37,8 +37,16 @@ def extract_voxel_size_from_tiff(file_path):
             if physical_size_x and physical_size_y and physical_size_z:
                 break
     except:
-        physical_size_x = 0.2
-        physical_size_y = 0.2
+        physical_size_x = 0.507
+        physical_size_y = 0.507
+        physical_size_z = 1.0
+
+
+    if physical_size_x is None:
+        physical_size_x = 0.507
+    if physical_size_y is None:
+        physical_size_y = 0.507
+    if physical_size_z is None:
         physical_size_z = 1.0
 
     return (physical_size_x, physical_size_y, physical_size_z)
@@ -80,7 +88,7 @@ def get_channel_intensity(marker_list, names, img):
 
 
 
-def write_IMC_input_channels(img_file: Path, results_dir: Path, nucleus_channel_marker_list, cytoplasm_channel_marker_list,membrane_channel_marker_list,cl=None):
+def write_IMC_input_channels(img_file: Path, results_dir: Path, nucleus_channel_marker_list, cytoplasm_channel_marker_list,membrane_channel_marker_list,cl=None, channel_names=None):
     #print(f"Crop limits: {cl}")
     image = imread(img_file)
     if cl != None:
@@ -98,7 +106,8 @@ def write_IMC_input_channels(img_file: Path, results_dir: Path, nucleus_channel_
                 cl[5]=imageshap[3]
             image = image[cl[0]:cl[1],:,cl[2]:cl[3],cl[4]:cl[5]]
             print(f"Cropping image to shape {image.shape}")
-    channel_names = get_channel_names(img_file)
+    if channel_names is None:
+        channel_names = get_channel_names(img_file)
     
     nucleus_channel = get_channel_intensity(nucleus_channel_marker_list, channel_names, image)
     
