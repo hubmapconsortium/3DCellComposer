@@ -12,6 +12,10 @@ WRAPPER TO GENERATE BLENDER FILES FOR VISUALIZATION
 Author: Haoran Chen
 Version: 1.1 December 14, 2023 Haoran Chen
         Fix output dir and update color map to 0-1
+Version: 1.2 May 27, 2025 R.F.Murphy
+        Trap error in creating triangular meshes
+Version: 1.3 June 1, 2025 Haoran Chen
+        Upgrade get_2D_mesh to handle edge cases with two-point contours
 """
 
 
@@ -61,8 +65,11 @@ def get_indices_pandas(data):
 	return pd.Series(d).groupby(d).apply(f)
 
 # Extract the 2D contours (meshes) from the slices
-def get_2D_mesh(slice_data, level=1.9):
-	return measure.find_contours(slice_data, level=level)
+def get_2D_mesh(slice_data, level=1.9, min_points=3):
+	contours = measure.find_contours(slice_data, level=level)
+	valid_contours = [contour for contour in contours if len(contour) >= min_points]
+	return valid_contours
+
 
 # Convert 2D contours to 3D
 def convert_2D_contour_to_3D(contour, z_value):
@@ -103,7 +110,7 @@ def meshing_3D(mask, mask_colored, num_of_col, output_path: Path):
 	all_groups = []
 	all_colors = []
 	offset = 0  # To keep track of the index offset for faces when combining multiple cells
-	
+
 	for cell_index in cell_coords.index:
 		current_coords = cell_coords[cell_index]
 		current_mask = np.zeros(mask.shape)
@@ -123,7 +130,12 @@ def meshing_3D(mask, mask_colored, num_of_col, output_path: Path):
 				start_2D_contours = [convert_2D_contour_to_3D(contour, z_start) for contour in start_slice_mesh]
 				start_triangles = [triangulate_2D_contour(contour) for contour in start_2D_contours]
 				start_2D_contours = np.vstack(start_2D_contours)
-				start_triangles = np.vstack(start_triangles)
+				try:
+					start_triangles = np.vstack(start_triangles)
+				except:
+					print('Error creating Blender files')
+					return
+
 				verts = np.vstack([verts, start_2D_contours])
 				start_triangles += offset
 				offset += len(start_2D_contours)
@@ -154,5 +166,5 @@ def meshing_3D(mask, mask_colored, num_of_col, output_path: Path):
 	all_colors = np.vstack(all_colors)
 	
 	color_map = generate_color_map(num_of_col)
-	write_to_mtl(color_map, output_path / 'cell_mesh.mtl')
-	write_to_obj(all_verts, all_faces, all_groups, all_colors, output_path / 'cell_mesh.obj')
+	write_to_mtl(color_map, f'{output_path}/cell_mesh.mtl')
+	write_to_obj(all_verts, all_faces, all_groups, all_colors, f'{output_path}/cell_mesh.obj')
